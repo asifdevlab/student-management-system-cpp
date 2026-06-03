@@ -2,17 +2,49 @@
 #include <fstream>
 using namespace std;
 
-class Student
+//BASE CLASS
+
+class Person
+{
+protected:
+    string name;
+
+public:
+    virtual void input()
+    {
+        cout << "Enter Name : ";
+        getline(cin, name);
+    }
+
+    virtual void display()
+    {
+        cout << "\nName : " << name;
+    }
+
+    virtual ~Person() {}
+};
+
+//DERIVED CLASS 
+
+class Student : public Person
 {
 private:
     int rollNo;
-    string name;
     float marks;
+
+    static int studentCount;
 
 public:
 
-    // Function to add student details
-    void addStudent()
+    // Constructor
+    Student()
+    {
+        rollNo = 0;
+        marks = 0;
+    }
+
+    // Override Input Function
+    void input() override
     {
         cout << "\nEnter Roll Number : ";
         cin >> rollNo;
@@ -22,39 +54,85 @@ public:
         cout << "Enter Name : ";
         getline(cin, name);
 
-        cout << "Enter Marks : ";
-        cin >> marks;
+        try
+        {
+            cout << "Enter Marks : ";
+            cin >> marks;
+
+            if(marks < 0 || marks > 100)
+            {
+                throw marks;
+            }
+        }
+        catch(float)
+        {
+            cout << "Invalid Marks!\n";
+            cout << "Marks set to 0.\n";
+            marks = 0;
+        }
+
+        studentCount++;
     }
 
-    // Function to display student details
-    void displayStudent()
+    // Override Display Function
+    void display() override
     {
         cout << "\n--------------------------------";
         cout << "\nRoll Number : " << rollNo;
         cout << "\nName        : " << name;
         cout << "\nMarks       : " << marks;
-
-        // Grade Calculation
-        if (marks >= 90)
-            cout << "\nGrade       : A";
-        else if (marks >= 75)
-            cout << "\nGrade       : B";
-        else if (marks >= 50)
-            cout << "\nGrade       : C";
-        else
-            cout << "\nGrade       : Fail";
-
-        cout << "\n--------------------------------\n";
+        cout << "\nGrade       : " << calculateGrade();
+        cout << "\n--------------------------------";
     }
 
-    // Getter function
+    // Grade Calculation
+    char calculateGrade()
+    {
+        if(marks >= 90)
+            return 'A';
+        else if(marks >= 75)
+            return 'B';
+        else if(marks >= 50)
+            return 'C';
+        else
+            return 'F';
+    }
+
+    // Getter
     int getRollNo()
     {
         return rollNo;
     }
 
-    
-    // Save data to file
+    float getMarks()
+    {
+        return marks;
+    }
+
+    // Update Student
+    void updateStudent()
+    {
+        cin.ignore();
+
+        cout << "\nEnter New Name : ";
+        getline(cin, name);
+
+        try
+        {
+            cout << "Enter New Marks : ";
+            cin >> marks;
+
+            if(marks < 0 || marks > 100)
+                throw marks;
+        }
+        catch(float)
+        {
+            cout << "Invalid Marks!\n";
+            marks = 0;
+        }
+    }
+
+    // File Writing
     void writeToFile(ofstream &file)
     {
         file << rollNo << endl;
@@ -62,7 +140,7 @@ public:
         file << marks << endl;
     }
 
-    // Read data from file
+    // File Reading
     void readFromFile(ifstream &file)
     {
         file >> rollNo;
@@ -73,7 +151,19 @@ public:
         file >> marks;
         file.ignore();
     }
+
+    // Static Function
+    static void showStudentCount()
+    {
+        cout << "\nTotal Students Added : "
+             << studentCount << endl;
+    }
 };
+
+// Static Variable Definition
+int Student::studentCount = 0;
+
+//Main
 
 int main()
 {
@@ -85,153 +175,212 @@ int main()
 
     do
     {
-        cout << "\n========== STUDENT MANAGEMENT SYSTEM ==========";
+        cout << "\n\n========== STUDENT MANAGEMENT SYSTEM ==========";
         cout << "\n1. Add Student";
         cout << "\n2. View All Students";
         cout << "\n3. Search Student";
-        cout << "\n4. Save Data to File";
-        cout << "\n5. Load Data from File";
-        cout << "\n6. Exit";
+        cout << "\n4. Update Student";
+        cout << "\n5. Delete Student";
+        cout << "\n6. Save Data";
+        cout << "\n7. Load Data";
+        cout << "\n8. Show Total Students";
+        cout << "\n9. Exit";
 
-        cout << "\nEnter Your Choice : ";
+        cout << "\n\nEnter Choice : ";
         cin >> choice;
 
         switch(choice)
         {
-            case 1:
+        case 1:
+        {
+            if(totalStudents < 100)
             {
-                if(totalStudents < 100)
-                {
-                    students[totalStudents].addStudent();
-                    totalStudents++;
+                students[totalStudents].input();
+                totalStudents++;
 
-                    cout << "\nStudent Added Successfully!\n";
-                }
-                else
-                {
-                    cout << "\nStorage Full!\n";
-                }
-
-                break;
+                cout << "\nStudent Added Successfully!";
+            }
+            else
+            {
+                cout << "\nStorage Full!";
             }
 
-            case 2:
-            {
-                if(totalStudents == 0)
-                {
-                    cout << "\nNo Student Records Found!\n";
-                }
-                else
-                {
-                    for(int i = 0; i < totalStudents; i++)
-                    {
-                        students[i].displayStudent();
-                    }
-                }
-
-                break;
-            }
-
-            case 3:
-            {
-                int roll;
-                bool found = false;
-
-                cout << "\nEnter Roll Number to Search : ";
-                cin >> roll;
-
-                for(int i = 0; i < totalStudents; i++)
-                {
-                    if(students[i].getRollNo() == roll)
-                    {
-                        students[i].displayStudent();
-                        found = true;
-                        break;
-                    }
-                }
-
-                if(found == false)
-                {
-                    cout << "\nStudent Not Found!\n";
-                }
-
-                break;
-            }
-
-            case 4:
-            {
-                ofstream file("students.txt");
-
-                for(int i = 0; i < totalStudents; i++)
-                {
-                    students[i].writeToFile(file);
-                }
-
-                file.close();
-
-                cout << "\nData Saved Successfully!\n";
-
-                break;
-            }
-
-            case 5:
-            {
-                ifstream file("students.txt");
-
-                if(!file)
-                {
-                    cout << "\nFile Not Found!\n";
-                    break;
-                }
-
-                totalStudents = 0;
-
-                while(file && totalStudents < 100)
-                {
-                    students[totalStudents].readFromFile(file);
-
-                    if(file)
-                    {
-                        totalStudents++;
-                    }
-                }
-
-                file.close();
-
-                cout << "\nData Loaded Successfully!\n";
-                cout << "\nTotal Students Loaded : "
-                    << totalStudents << endl;
-
-                cout << "\n===== STUDENT RECORDS =====\n";
-
-                if(totalStudents == 0)
-                {
-                    cout << "\nNo Records Found!\n";
-                }
-                else
-                {
-                    for(int i = 0; i < totalStudents; i++)
-                    {
-                        students[i].displayStudent();
-                    }
-                }
-
-                break;
-            }
-
-            case 6:
-            {
-                cout << "\nThank You!\n";
-                break;
-            }
-
-            default:
-            {
-                cout << "\nInvalid Choice!\n";
-            }
+            break;
         }
 
-    } while(choice != 6);
+        case 2:
+        {
+            if(totalStudents == 0)
+            {
+                cout << "\nNo Records Found!";
+            }
+            else
+            {
+                // Runtime Polymorphism
+                Person *ptr;
+
+                for(int i = 0; i < totalStudents; i++)
+                {
+                    ptr = &students[i];
+                    ptr->display();
+                }
+            }
+
+            break;
+        }
+
+        case 3:
+        {
+            int roll;
+            bool found = false;
+
+            cout << "\nEnter Roll Number : ";
+            cin >> roll;
+
+            for(int i = 0; i < totalStudents; i++)
+            {
+                if(students[i].getRollNo() == roll)
+                {
+                    students[i].display();
+                    found = true;
+                    break;
+                }
+            }
+
+            if(!found)
+            {
+                cout << "\nStudent Not Found!";
+            }
+
+            break;
+        }
+
+        case 4:
+        {
+            int roll;
+            bool found = false;
+
+            cout << "\nEnter Roll Number to Update : ";
+            cin >> roll;
+
+            for(int i = 0; i < totalStudents; i++)
+            {
+                if(students[i].getRollNo() == roll)
+                {
+                    students[i].updateStudent();
+
+                    cout << "\nRecord Updated Successfully!";
+                    found = true;
+                    break;
+                }
+            }
+
+            if(!found)
+            {
+                cout << "\nStudent Not Found!";
+            }
+
+            break;
+        }
+
+        case 5:
+        {
+            int roll;
+            bool found = false;
+
+            cout << "\nEnter Roll Number to Delete : ";
+            cin >> roll;
+
+            for(int i = 0; i < totalStudents; i++)
+            {
+                if(students[i].getRollNo() == roll)
+                {
+                    for(int j = i; j < totalStudents - 1; j++)
+                    {
+                        students[j] = students[j + 1];
+                    }
+
+                    totalStudents--;
+
+                    cout << "\nRecord Deleted Successfully!";
+                    found = true;
+                    break;
+                }
+            }
+
+            if(!found)
+            {
+                cout << "\nStudent Not Found!";
+            }
+
+            break;
+        }
+
+        case 6:
+        {
+            ofstream file("students.txt");
+
+            for(int i = 0; i < totalStudents; i++)
+            {
+                students[i].writeToFile(file);
+            }
+
+            file.close();
+
+            cout << "\nData Saved Successfully!";
+            break;
+        }
+
+        case 7:
+        {
+            ifstream file("students.txt");
+
+            if(!file)
+            {
+                cout << "\nFile Not Found!";
+                break;
+            }
+
+            totalStudents = 0;
+
+            while(file && totalStudents < 100)
+            {
+                students[totalStudents].readFromFile(file);
+
+                if(file)
+                {
+                    totalStudents++;
+                }
+            }
+
+            file.close();
+
+            cout << "\nData Loaded Successfully!";
+            cout << "\nTotal Students Loaded : "
+                 << totalStudents;
+
+            break;
+        }
+
+        case 8:
+        {
+            Student::showStudentCount();
+            break;
+        }
+
+        case 9:
+        {
+            cout << "\nThank You!";
+            break;
+        }
+
+        default:
+        {
+            cout << "\nInvalid Choice!";
+        }
+        }
+
+    } while(choice != 9);
 
     return 0;
 }
